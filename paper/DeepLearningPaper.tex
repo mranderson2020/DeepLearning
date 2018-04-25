@@ -1,0 +1,141 @@
+\documentclass{article}
+
+% if you need to pass options to natbib, use, e.g.:
+% \PassOptionsToPackage{numbers, compress}{natbib}
+% before loading nips_2017
+%
+% to avoid loading the natbib package, add option nonatbib:
+% \usepackage[nonatbib]{nips_2017}
+
+\usepackage[final]{nips_2018}
+
+% to compile a camera-ready version, add the [final] option, e.g.:
+% \usepackage[final]{nips_2017}
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+
+\title{Deep Learning Project for CSC 416}
+
+% The \author macro works with any number of authors. There are two
+% commands used to separate the names and addresses of multiple
+% authors: \And and \AND.
+%
+% Using \And between authors leaves it to LaTeX to determine where to
+% break the lines. Using \AND forces a line break at that point. So,
+% if LaTeX puts 3 of 4 authors names on the first line, and the last
+% on the second line, try using \AND instead of \And before the third
+% author name.
+
+\author{
+  Mitchell Anderson \\
+  Computer Science Undergraduate \\
+  South Dakota School of Mines and Technology\\
+  Rapid City, SD 57701 \\
+  \texttt{mitchell.anderson@mines.sdsmt.edu} \\\
+}
+%\nipsfinalcopy
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+  This paper covers the process through which a deep 
+  neural network was created for the ImageNet dataset. It
+  covers what was hoped to have been accomplish and the setbacks
+  that were encountered.
+\end{abstract}
+
+\section{Introduction}
+
+In the process of attempting to write the program, several consecutive
+issues were encountered. The code was largely based off of a tutorial
+from the TensorFlow website which covered the estimator API[1].
+
+\subsection{What Went Wrong}
+
+The tutorial from the TensorFlow website introduced estimators using
+the iris dataset. This utilized data from a CSV file, which it parsed
+and fed into a training algorithm. The goal for this project was to
+modify the TensorFlow code to read and train on images from the ImageNet
+dataset. During this process, however, there were several issues encountered
+to which a solution was never found.
+
+Through the process, many of the issues were overcome, but the problem
+of adapting the code to the ImageNet dataset proved more difficult than
+expected. The final issue encountered which no solution was found for
+was to use the data collected from the images and feeding it into the
+\texttt{DNNClassifier} function. To do this, the data first had to be used to
+create a \texttt{feature\_column}, which was then fed into \texttt{DNNClassifier}.
+
+It is unknown whether it was the creating a \texttt{feature\_column} step which
+was never solved, or if it was feeding that information into the
+\texttt{DNNClassifier} that caused the issue. It is also possible that there
+was a bug elsewhere in the program which was spilling over into that
+section.
+
+When the program is run, the most recently encountered error is printed
+to the screen. Given the error, it is possible for issue to have occurred
+anywhere in the program. A likely location, aside from the aforementioned
+areas, could be in the \texttt{train\_input\_fn} function, which was another parameter
+given to \texttt{DNNClassifier}.
+
+\subsection{What Was the Goal}
+
+As mentioned before, the goal was to modify the tutorial program
+given by TensorFlow to analyze and classify images from the ImageNet
+dataset, rather than classifying the iris dataset using CSV files.
+
+Since the program was never finished, different optimizations could
+not be done. Had there been an opportunity, many different hyperparameters
+would have been tuned to find the most accurate result. This includes the
+number of hidden layers and neurons in those layers, the activation function,
+and the optimization function, among others.
+
+As the program was never completed, the following the sections could not be
+expanded upon. However, the outline of what would have been
+discussed is shown below.
+
+\section{Neural Network Architecture}
+
+In this section, the program's deep neural network architecture would
+be explained, as well as the reasons for why it was chosen.
+
+\section{Techniques Used to Optimize Results}
+
+This section would cover what techniques would have been used
+to produce the best possible results. For example, an explanation
+behind the tests performed on different activation functions and
+which one was chosen to have provided the best results. How the
+training set was split from the test set would also be explained here.
+
+\section{The Results}
+
+In this section, the results of the deep neural network would
+be stated and analyzed. Including tables and visualizations of
+the results and the sets used to train and test.
+
+\section{Future Enhancements}
+
+In this final section, the parts of the program which could have
+been further improved would be discussed. Further tests could also
+be discussed here.
+
+At the moment, the improvements to be made to the program includes,
+simply, to make the program run without error.
+
+\section*{References}
+
+\small
+
+[1] The TensorFlow Authors\ \ (2016) {\it Premade Estimators for ML
+Beginners.} https://www.tensorflow.org/
+
+\end{document}

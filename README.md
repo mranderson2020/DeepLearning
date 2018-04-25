@@ -1,5 +1,12 @@
 # DeepLearning
 
-[Describe how to run, how to download data, and where to place data]
+Program is not running (see paper). No extra files nor commands needed.
+To run:
 
-[Include full path to paper]
+`python3 classify.py`
+
+---
+
+File path to LaTeX paper:
+
+`paper/DeepLearningPaper.pdf`
