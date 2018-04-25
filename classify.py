@@ -4,10 +4,20 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from tensorflow.python.keras.applications.vgg16 import VGG16
+from tensorflow.python.keras import models
+from tensorflow.python.keras import layers
+import numpy as np
+
 import argparse
 import tensorflow as tf
 
-import load_data
+from PIL import Image
+import requests
+import urllib
+import os
+
+#import load_data
 
 
 parser = argparse.ArgumentParser()
@@ -17,55 +27,127 @@ parser.add_argument('--train_steps', default=1000, type=int,
 
 def main(argv):
     args = parser.parse_args(argv[1:])
+    
+    # Seem to need ability to install h5py to use VGG16
+    #conv_base = VGG16(weights='imagenet',
+    #              include_top=False,
+    #              input_shape=(150, 150, 3))
 
-    # Fetch the data
-    (train_x, train_y), (test_x, test_y) = load_data.load_data()
+    model = tf.keras.Sequential([
+      tf.keras.layers.Dense(10, activation="relu", input_shape=(150, 150, 3)),  # input shape required
+      tf.keras.layers.Dense(10, activation="relu"),
+      tf.keras.layers.Dense(3)
+    ])
 
-    # Feature columns describe how to use the input.
+    #model = models.Sequential()
+    #model.add(conv_base)
+    model.add(layers.Flatten())
+    #model.add(layers.Dense(256, activation='relu'))
+    #model.add(layers.Dense(1, activation='sigmoid'))
+    #conv_base.trainable = False
+    model.compile(loss='binary_crossentropy',
+                  optimizer=tf.keras.optimizers.RMSprop(lr=2e-5),
+                  metrics=['acc'])
+                  
+    model_dir = os.path.join(os.getcwd(), "models/catvsdog")
+    os.makedirs(model_dir, exist_ok=True)
+    print("model_dir: ",model_dir)
+    est_catvsdog = tf.keras.estimator.model_to_estimator(keras_model=model,
+                                                        model_dir=model_dir)
+              
+    # Remove all non-functioning urls
+    urlFile = open("dog_URLs.txt")
+    test_urls = urlFile.readlines()
+    test_labels = []
     count = 0
-    my_feature_columns = []
-    for key in train_x:
-        my_feature_columns.append(tf.feature_column.numeric_column(key=str(count)))
-        count += 1
+    for url in test_urls:
+        if count % 2 == 0:
+            test_labels.append("Dogs")
+        else:
+            test_labels.append("Cats")
+        print(count)
+        print(url)
+        if not url:
+            del test_urls[count]
+            count += 1
+        else:
+            try:
+                url.encode('ascii')
+                
+            except UnicodeEncodeError:
+                del test_urls[count]
+                count += 1
+                continue
+            try:
+                req = urllib.request.Request(url)
+            except IOError:
+                del test_urls[count]
+                count += 1
+                continue
+            try:
+                response = urllib.request.urlopen(req, timeout = 1)
+            except IOError:
+                del test_urls[count]
+            count += 1
+    print(len(test_urls))
+    train_y = np.asarray(test_labels).astype('str').reshape((-1,1))
+    
+    # TODO Separate training set from test set
+    train_spec = tf.estimator.TrainSpec(input_fn=lambda: imgs_input_fn(test_urls,
+                                                                       labels=train_y,
+                                                                       perform_shuffle=True,
+                                                                       repeat_count=5,
+                                                                       batch_size=20), 
+                                        max_steps=500)
+    eval_spec = tf.estimator.EvalSpec(input_fn=lambda: imgs_input_fn(test_urls,
+                                                                     labels=train_y,
+                                                                     perform_shuffle=False,
+                                                                     batch_size=1))
 
-    # Build 2 hidden layer DNN with 10, 10 units respectively.
-    classifier = tf.estimator.DNNClassifier(
-        feature_columns=my_feature_columns,
-        # Two hidden layers of 10 nodes each.
-        hidden_units=[10, 10],
-        # The model must choose between 3 classes.
-        n_classes=3)
+    tf.estimator.train_and_evaluate(est_catvsdog, train_spec, eval_spec)
+                                                        
+                                                        
 
-    # Train the Model.
-    classifier.train(
-        input_fn=lambda:load_data.train_input_fn(train_x, train_y,
-                                                 args.batch_size),
-        steps=args.train_steps)
+def imgs_input_fn(filenames, labels=None, perform_shuffle=False, repeat_count=1, batch_size=1):
 
-    # Evaluate the model.
-    #eval_result = classifier.evaluate(
-    #    input_fn=lambda:load_data.eval_input_fn(test_x, test_y,
-    #                                            args.batch_size))
-
-    #print('\nTest set accuracy: {accuracy:0.3f}\n'.format(**eval_result))
-
-    # Generate predictions from the model
-    #expected = ['Dog', 'Cat', 'Bird']
-    #predict_x = { }
-
-    #predictions = classifier.predict(
-    #    input_fn=lambda:load_data.eval_input_fn(predict_x,
-    #                                            labels=None,
-    #                                            batch_size=args.batch_size))
-
-    #template = ('\nPrediction is "{}" ({:.1f}%), expected "{}"')
-
-    #for pred_dict, expec in zip(predictions, expected):
-    #    class_id = pred_dict['class_ids'][0]
-    #    probability = pred_dict['probabilities'][class_id]
-
-    #    print(template.format(load_data.SPECIES[class_id],
-    #                          100 * probability, expec))
+    def _parse_function(filename, label):
+        #req = urllib.request.Request(tf.as_string(filename))
+        #response = urllib.request.urlopen(req, timeout = 1)  
+        #image_data = response.read()
+                
+        image_string = tf.read_file(filename)
+        image = tf.image.decode_image(image_string, channels=3)
+        image.set_shape([None, None, None])
+        image = tf.image.resize_images(image, [150, 150])
+        image = tf.subtract(image, 116.779) # Zero-center by mean pixel
+        image.set_shape([150, 150, 3])
+        image = tf.reverse(image, axis=[2]) # 'RGB'->'BGR'
+        d = dict(zip(["dense_1_input"], [image])), label
+        return d
+        
+    if labels is None:
+        labels = [0]*len(filenames)
+    labels=np.array(labels)
+    
+    # Expand the shape of "labels" if necessary
+    if len(labels.shape) == 1:
+        labels = np.expand_dims(labels, axis=67500)
+        
+    filenames = tf.constant(filenames)
+    labels = tf.constant(labels)
+    labels = tf.cast(labels, tf.float32)
+    dataset = tf.data.Dataset.from_tensor_slices((filenames, labels))
+    dataset = dataset.map(_parse_function)
+    
+    if perform_shuffle:
+        # Randomizes input using a window of 256 elements (read into memory)
+        dataset = dataset.shuffle(buffer_size=256)
+    dataset = dataset.repeat(repeat_count)  # Repeats dataset this # times
+    dataset = dataset.batch(batch_size)  # Batch size to use
+    iterator = dataset.make_one_shot_iterator()
+    batch_features, batch_labels = iterator.get_next()
+    return batch_features, batch_labels
+    
 
 
 if __name__ == '__main__':
