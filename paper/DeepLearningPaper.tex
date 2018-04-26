@@ -1,3 +1,11 @@
+%TODO
+% Prediction: Using urls is what caused the logits vs labels issue
+% Can probably get Keras working with images as files, rather than urls. Not enough time to request access to images and download and test
+% Include code of some of the error messages received
+% Mention h5py requirement (update code to show what should be commented and uncommented)
+% Cite the newly used source: An Easy Guide to build new TensorFlow Datasets and Estimator with Keras Model
+%TODO
+
 \documentclass{article}
 
 % if you need to pass options to natbib, use, e.g.:
@@ -18,8 +26,9 @@
 \usepackage{url}            % simple URL typesetting
 \usepackage{booktabs}       % professional-quality tables
 \usepackage{amsfonts}       % blackboard math symbols
-\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+%\usepackage{nicefrac}       % compact symbols for 1/2, etc.
 \usepackage{microtype}      % microtypography
+\usepackage{siunitx}
 
 \title{Deep Learning Project for CSC 416}
 
@@ -57,9 +66,12 @@
 
 In the process of attempting to write the program, several consecutive
 issues were encountered. The code was largely based off of a tutorial
-from the TensorFlow website which covered the estimator API[1].
+from the TensorFlow website which covered the estimator API[1]. During
+the extended week, a different approach was attempted, to see if something
+functioning could quickly be put together, however, this attempt fell short
+as well.
 
-\subsection{What Went Wrong}
+\subsection{What Went Wrong Initially}
 
 The tutorial from the TensorFlow website introduced estimators using
 the iris dataset. This utilized data from a CSV file, which it parsed
@@ -71,7 +83,7 @@ to which a solution was never found.
 Through the process, many of the issues were overcome, but the problem
 of adapting the code to the ImageNet dataset proved more difficult than
 expected. The final issue encountered which no solution was found for
-was to use the data collected from the images and feeding it into the
+was to use the data collected from the images and feed it into the
 \texttt{DNNClassifier} function. To do this, the data first had to be used to
 create a \texttt{feature\_column}, which was then fed into \texttt{DNNClassifier}.
 
@@ -81,17 +93,47 @@ was never solved, or if it was feeding that information into the
 was a bug elsewhere in the program which was spilling over into that
 section.
 
-When the program is run, the most recently encountered error is printed
+When the program (which can be found in the code's repository history from
+Apr 22, 2018) is run, the most recently encountered error is printed
 to the screen. Given the error, it is possible for issue to have occurred
 anywhere in the program. A likely location, aside from the aforementioned
 areas, could be in the \texttt{train\_input\_fn} function, which was another parameter
 given to \texttt{DNNClassifier}.
 
+\subsection{What Went Wrong on the Second Attempt}
+
+As mentioned, during the extended week for the project, a second method
+was attempted to classify images from the ImageNet dataset. Again, the code
+was based off a tutorial, but this time one given by Chengwei Zhang[2].
+This tutorial used the TensorFlow Keras integration to create a
+TensorFlow Estimator, then used that estimator to train a neural network.
+
+Similarly to before, the code was modified to accommodate using the
+ImageNet URL dataset. Once again, there were many errors that were raised
+one after another, so it was unable to be completed after one short week.
+
+If there had been enough time, the program seemed easily completable had
+image files been used, rather than image URLs. It appeared fairly
+straightforward how to feed image files into the program, but decoding
+image files remotely from a website, then feeding that into the TensorFlow
+proved to be a more difficult task than anticipated.
+
+One final thing to note from the second attempt is that the tutorial used
+a TensorFlow function called VGG16 (commented out in the source code).
+However, when this was used, an exception was raised stating that 
+\texttt{h5py} was required. A quick look online revealed that the most
+likely solution was simply to install \texttt{h5py} using \texttt{pip}.
+However, the code was being run on the Linux23 lab machine, so it could
+not be installed due to privilege levels. Either being unable to use this
+function or using image URLs rather than image files is likely what
+caused the most recent error, displayed when the program is run.
+
 \subsection{What Was the Goal}
 
 As mentioned before, the goal was to modify the tutorial program
-given by TensorFlow to analyze and classify images from the ImageNet
-dataset, rather than classifying the iris dataset using CSV files.
+given by TensorFlow (and later given by Chengwei Zhang) to analyze
+and classify images from the ImageNet dataset, rather than classifying
+the iris dataset using CSV files.
 
 Since the program was never finished, different optimizations could
 not be done. Had there been an opportunity, many different hyperparameters
@@ -106,12 +148,27 @@ discussed is shown below.
 \section{Neural Network Architecture}
 
 In this section, the program's deep neural network architecture would
-be explained, as well as the reasons for why it was chosen.
+be explained, as well as the reasons for why it was chosen. The current
+architecture of the program is explained here, however, some of the aspects
+would likely change should the program be completed, tested, and tweaked.
+
+The program currently has a deep neural network, consisting of two hidden layers,
+each with ten neurons. The input layer is of the shape \texttt{(150, 150, 3)}, so
+it requires an image with a resolution of 150x150 where the three is the RGB values.
+The activation functions for both of these layers is ReLU. If the aforementioned \texttt{VGG16} function were working, then there would be extra pre-trained 
+layers given by the function which would help with the classification.
+
+The networks optimizer is using the \texttt{RMSprop} function provided by
+Keras. The learning rate is set to \num{1e-10}, as suggested by the
+tutorial given by Chengwei Zhang. This model, created in Keras, is then
+fed into the TensorFlow estimator framework, using the function
+\texttt{model\_to\_estimator}. The input data is resized to the shape of
+\texttt{(150, 150, 3)}, and the data is then fed into the estimator.
 
 \section{Techniques Used to Optimize Results}
 
 This section would cover what techniques would have been used
-to produce the best possible results. For example, an explanation
+to fine tune and produce the best possible results. For example, an explanation
 behind the tests performed on different activation functions and
 which one was chosen to have provided the best results. How the
 training set was split from the test set would also be explained here.
@@ -137,5 +194,7 @@ simply, to make the program run without error.
 
 [1] The TensorFlow Authors\ \ (2016) {\it Premade Estimators for ML
 Beginners.} https://www.tensorflow.org/
+
+[2] Zhang, Chengwei\ \ (2017) {\it An Easy Guide to Build New TensorFlow Datasets and Estimator with Keras Model} https://www.dlology.com/
 
 \end{document}

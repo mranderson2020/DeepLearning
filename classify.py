@@ -29,16 +29,19 @@ def main(argv):
     args = parser.parse_args(argv[1:])
     
     # Seem to need ability to install h5py to use VGG16
+    # If h5py is installed, uncomment the following three lines
     #conv_base = VGG16(weights='imagenet',
     #              include_top=False,
     #              input_shape=(150, 150, 3))
-
+    
+    # If h5py is installed, comment out the following block
     model = tf.keras.Sequential([
       tf.keras.layers.Dense(10, activation="relu", input_shape=(150, 150, 3)),  # input shape required
       tf.keras.layers.Dense(10, activation="relu"),
       tf.keras.layers.Dense(3)
     ])
-
+    
+    # If h5py is installed, uncomment all of the following block of code
     #model = models.Sequential()
     #model.add(conv_base)
     model.add(layers.Flatten())
